@@ -1,6 +1,6 @@
 # Autonomous Fire Risk Surveyor
 
-A multi-robot system in ROS2 that surveys a simulated forest for fire risk. A drone explores and maps the area on its own, then hands targets to a ground robot (Clearpath Husky). Built for UTS 41068 Robotics Studio 1 by a team of four.
+A multi-robot system in ROS2 that surveys a simulated forest for fire risk. A drone explores and maps the area on its own while a ground robot (Clearpath Husky) navigates below. Built for UTS 41068 Robotics Studio 1 by a team of four.
 
 <!-- Add a GIF or screenshot of RViz here: drone exploring, frontiers in blue, A* path -->
 <!-- ![Drone exploring the forest in RViz](docs/demo.gif) -->
@@ -11,7 +11,9 @@ A multi-robot system in ROS2 that surveys a simulated forest for fire risk. A dr
 2. **Picks where to explore next:** a frontier explorer finds the edges between mapped and unmapped space, groups them into clusters, and scores each one by how much unknown area it would reveal and how far away it is.
 3. **Plans a path:** a custom A* planner plans across the occupancy grid to the chosen frontier, with obstacle inflation and a configurable way of treating unknown space.
 4. **Follows the path:** a pure-pursuit-style path follower turns the path into velocity commands for the drone.
-5. **Hands off to the ground robot:** the Husky runs Nav2 in the same simulation to reach targets on the ground.
+5. **Ground robot:** the Husky runs Nav2 in the same simulation and shares its map with the drone's planner.
+
+The planned final step, the drone sending fire hotspot locations for the Husky to inspect, was not finished (see below).
 
 The drone and the Husky run together in one Ignition Gazebo world, each with its own namespace, TF tree and EKF localisation.
 
@@ -78,6 +80,7 @@ More setup notes and troubleshooting are in `src/41068_ignition_bringup_with_dro
 
 ## What I'd do differently
 
+- Integrate early and often. We built the drone navigation, perception and ground robot separately and left joining them until the last weeks, so the drone-to-Husky handoff was never finished. Next time I'd agree the interfaces between parts (topics, message types, frames) in week one and get a rough end-to-end version running before polishing any single part.
 - Plan in 3D. The planner works on a 2D grid at a fixed altitude, so the drone can't fly over or under canopy.
 - Replace the hand-tuned frontier scoring with an information-gain measure based on the camera's field of view, since the goal is to see the ground rather than just map it.
-- Add a proper task allocator for the drone-to-Husky handoff instead of fixed rules.
+- Finish the handoff: have the perception node publish hotspot positions in the shared map frame, and a small task allocator send the nearest one to the Husky as a Nav2 goal.
